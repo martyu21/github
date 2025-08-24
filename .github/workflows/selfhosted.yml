@@ -1,0 +1,10 @@
+name: Self-Hosted Test
+
+on: workflow_dispatch
+
+jobs:
+  test:
+    runs-on: [self-hosted, ubuntu-lab]
+    steps:
+      - name: Say Hello
+        run: echo "Hello from your Ubuntu runner!"
