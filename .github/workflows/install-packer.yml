@@ -1,0 +1,27 @@
+name: Install Packer on Self-Hosted Ubuntu
+
+on:
+  workflow_dispatch:
+
+jobs:
+  install-packer:
+    runs-on: self-hosted  # Ensure your runner is labeled 'self-hosted'
+    steps:
+      - name: Check OS
+        run: uname -a
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget unzip
+
+      - name: Download Packer
+        run: |
+          PACKER_VERSION="1.10.0"
+          wget https://releases.hashicorp.com/packer/${PACKER_VERSION}/packer_${PACKER_VERSION}_linux_amd64.zip
+          unzip packer_${PACKER_VERSION}_linux_amd64.zip
+          sudo mv packer /usr/local/bin/
+          packer version
+
+      - name: Verify Packer install
+        run: packer version
