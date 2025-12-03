@@ -1,0 +1,43 @@
+name: Deploy Proxmox VMs
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the user repo (this repo, with tfvars files)
+      - name: Checkout user repo
+        uses: actions/checkout@v4
+        with:
+          path: user_repo
+
+      # Checkout the Proxmox Terraform repo
+      - name: Checkout Proxmox Terraform repo
+        uses: actions/checkout@v4
+        with:
+          repository: martyu21/terraform_proxmox
+          path: terraform_proxmox
+
+      # Setup Terraform
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.5
+
+      # Initialize Terraform
+      - name: Terraform Init
+        working-directory: terraform_proxmox/proxmox
+        run: terraform init
+
+      # Apply for each tfvars file in user repo
+      - name: Apply all tfvars
+        run: |
+          for file in user_repo/org/spoke/*/*.tfvars; do
+            echo "Applying $file..."
+            terraform -chdir=terraform_proxmox apply -auto-approve -var-file="$file"
+          done
