@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       TF_VAR_access_key: ${{ secrets.ACCESS_KEY }}
-      TF_VAR_secrect_key: ${{ secrets.SECRET_KEY }}
+      TF_VAR_secret_key: ${{ secrets.SECRET_KEY }}
       
     steps:
       # Checkout the user repo (this repo, with tfvars files)
