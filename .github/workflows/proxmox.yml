@@ -24,7 +24,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: martyu21/terraform_proxmox
-          path: terraform_proxmox
+          path: terraform_proxmox/proxmox
 
       # Setup Terraform
       - name: Setup Terraform
@@ -34,7 +34,7 @@ jobs:
 
       # Initialize Terraform
       - name: Terraform Init
-        working-directory: terraform_proxmox/proxmox
+        working-directory: proxmox
         run: terraform init
 
       # Apply for each tfvars file in user repo
