@@ -4,10 +4,9 @@ on:
   push:
     branches:
       - main
-
 jobs:
   terraform:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     env:
       TF_VAR_access_key: ${{ secrets.ACCESS_KEY }}
       TF_VAR_secret_key: ${{ secrets.SECRET_KEY }}
