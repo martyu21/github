@@ -25,7 +25,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: martyu21/terraform_proxmox
-          path: terraform_proxmox/proxmox
+          path: proxmox
 
       # Setup Terraform
       - name: Setup Terraform
@@ -35,7 +35,7 @@ jobs:
 
       # Initialize Terraform
       - name: Terraform Init
-        working-directory: terraform_proxmox/proxmox
+        working-directory: proxmox
         run: terraform init
 
       # Apply for each tfvars file in user repo
@@ -43,5 +43,5 @@ jobs:
         run: |
           for file in user_repo/org/spoke/*/*.tfvars; do
             echo "Applying $file..."
-            terraform -chdir=terraform_proxmox/proxmox apply -auto-approve -var-file="$file"
+            terraform -chdir=proxmox apply -auto-approve -var-file="$file"
           done
