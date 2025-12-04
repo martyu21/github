@@ -43,5 +43,5 @@ jobs:
         run: |
           for file in user_repo/org/spoke/*/*.tfvars; do
             echo "Applying $file..."
-            terraform apply -auto-approve -var-file="$file"
+            terraform -chdir=proxmox apply -auto-approve -var-file="$file"
           done
