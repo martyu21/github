@@ -41,7 +41,7 @@ jobs:
       # Apply for each tfvars file in user repo
       - name: Apply all tfvars
         run: |
-          for file in user_repo/org/*/*.tfvars; do
+          for file in user_repo/proxmox/org/*/*.tfvars; do
             echo "Applying $file..."
             terraform -chdir=proxmox apply -auto-approve -var-file="$file"
           done
