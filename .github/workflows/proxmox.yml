@@ -35,7 +35,7 @@ jobs:
 
       # Initialize Terraform
       - name: Terraform Init
-        working-directory: proxmox
+        working-directory: proxmox/proxmox
         run: terraform init
 
       # Apply for each tfvars file in user repo
