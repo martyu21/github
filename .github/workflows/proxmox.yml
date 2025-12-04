@@ -42,6 +42,7 @@ jobs:
       - name: Apply all tfvars
         run: |
           for file in user_repo/org/spoke/*/*.tfvars; do
-            echo "Applying $file..."
-            terraform -chdir=proxmox apply -auto-approve -var-file="$file"
+            abs_file="$(realpath "$file")"
+            echo "Applying $abs_file..."
+            terraform -chdir=proxmox apply -auto-approve -var-file="$abs_file"
           done
