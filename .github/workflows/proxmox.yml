@@ -40,11 +40,19 @@ jobs:
         run: terraform init
 
       # Terraform apply for each tfvars file in user repo
-      - name: Apply all tfvars
+      
+      - name: Apply all tfvars with per-spoke workspaces
         run: |
           shopt -s nullglob
           for file in user_repo/org/spoke/*/*.tfvars; do
             abs_file="$(realpath "$file")"
-            echo "Applying $abs_file..."
+            spoke="$(basename "$(dirname "$file")")"
+
+            echo "Applying $abs_file in workspace $spoke..."
+
+            # Ensure workspace exists, then select it
+            terraform -chdir=proxmox/proxmox workspace new "$spoke" || true
+            terraform -chdir=proxmox/proxmox workspace select "$spoke"
+
             terraform -chdir=proxmox/proxmox apply -auto-approve -var-file="$abs_file"
           done
