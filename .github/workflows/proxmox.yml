@@ -15,14 +15,14 @@ jobs:
       VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
 
     steps:
-      # Checkout the user repo (this repo, with tfvars files)
-      - name: Checkout user repo
+      # Checkout the github user repo (this repo, with tfvars files)
+      - name: Checkout github user repo
         uses: actions/checkout@v4
         with:
           path: user_repo
 
-      # Checkout the Proxmox Terraform repo
-      - name: Checkout Proxmox Terraform repo
+      # Checkout the terraform_proxmox repo
+      - name: Checkout terraform_proxmox repo
         uses: actions/checkout@v4
         with:
           repository: martyu21/terraform_proxmox
@@ -39,7 +39,7 @@ jobs:
         working-directory: proxmox/proxmox
         run: terraform init
 
-      # Apply for each tfvars file in user repo
+      # Terraform apply for each tfvars file in user repo
       - name: Apply all tfvars
         run: |
           shopt -s nullglob
