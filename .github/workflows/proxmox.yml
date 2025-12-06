@@ -83,8 +83,14 @@ jobs:
             echo "Processing spoke $spoke..."
             terraform -chdir=proxmox/proxmox workspace new "$spoke" || true
             terraform -chdir=proxmox/proxmox workspace select "$spoke"
-            for file in ./user_repo/org/spoke/$spoke/*.tfvars; do
-              echo "Applying $file..."
-              terraform -chdir=proxmox/proxmox apply -auto-approve -var-file="$file"
+
+            # Find all changed tfvars files for this spoke
+            files=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} \
+              | grep "org/spoke/$spoke/.*\.tfvars")
+
+            for file in $files; do
+              abs_file="./user_repo/$file"
+              echo "Applying $abs_file..."
+              terraform -chdir=proxmox/proxmox apply -auto-approve -var-file="$abs_file"
             done
           done
