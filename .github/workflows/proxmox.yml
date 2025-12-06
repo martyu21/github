@@ -52,14 +52,11 @@ jobs:
           fi
 
           echo "Using commit range: $range"
-
-          # Show raw changed files for debugging
           git diff --name-only $range
 
-          # Match tfvars files under org/spoke/<spoke>/
           changed_spokes=$(git diff --name-only $range \
-            | grep -E '^user_repo/org/spoke/[^/]+/[^/]+\.tfvars$' \
-            | awk -F'/' '{print $4}' \
+            | grep -E '^org/spoke/[^/]+/[^/]+\.tfvars$' \
+            | awk -F'/' '{print $3}' \
             | sort -u)
 
           echo "Changed spokes: $changed_spokes"
