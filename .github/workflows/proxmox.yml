@@ -39,20 +39,29 @@ jobs:
         working-directory: proxmox/proxmox
         run: terraform init
 
+
       # Terraform apply for each tfvars file in user repo
-      
-      - name: Apply all tfvars with per-spoke workspaces
+
+      - name: Find changed spokes
+        id: changes
         run: |
-          shopt -s nullglob
-          for file in user_repo/org/spoke/*/*.tfvars; do
-            abs_file="$(realpath "$file")"
-            spoke="$(basename "$(dirname "$file")")"
+          changed_spokes=$(git diff --name-only ${{ github.sha }} ${{ github.event.before }} \
+            | grep 'user_repo/org/spoke/.*/.*\.tfvars' \
+            | xargs -n1 dirname \
+            | xargs -n1 basename \
+            | sort -u)
+          echo "changed_spokes=$changed_spokes" >> $GITHUB_OUTPUT
 
-            echo "Applying $abs_file in workspace $spoke..."
+      # Terraform apply for each tfvars file in user repo
 
-            # Ensure workspace exists, then select it
+      - name: Apply only changed spokes
+        if: steps.changes.outputs.changed_spokes != ''
+        run: |
+          for spoke in ${{ steps.changes.outputs.changed_spokes }}; do
+            echo "Processing spoke $spoke..."
             terraform -chdir=proxmox/proxmox workspace new "$spoke" || true
             terraform -chdir=proxmox/proxmox workspace select "$spoke"
-
-            terraform -chdir=proxmox/proxmox apply -auto-approve -var-file="$abs_file"
+            for file in user_repo/org/spoke/$spoke/*.tfvars; do
+              terraform -chdir=proxmox/proxmox apply -auto-approve -var-file="$file"
+            done
           done
