@@ -45,11 +45,18 @@ jobs:
       - name: Find changed spokes
         id: changes
         run: |
-          changed_spokes=$(git diff --name-only ${{ github.sha }} ${{ github.event.before }} \
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            range="${{ github.base_ref }}...${{ github.head_ref }}"
+          else
+            range="${{ github.event.before }} ${{ github.sha }}"
+          fi
+
+          changed_spokes=$(git diff --name-only $range \
             | grep 'user_repo/org/spoke/.*/.*\.tfvars' \
             | xargs -n1 dirname \
             | xargs -n1 basename \
             | sort -u)
+
           echo "changed_spokes=$changed_spokes" >> $GITHUB_OUTPUT
 
       # Terraform apply for each tfvars file in user repo
