@@ -75,3 +75,16 @@ jobs:
               terraform -chdir=proxmox/proxmox apply -auto-approve -var-file="$file"
             done
           done
+
+      - name: Apply only changed spokes
+        if: steps.changes.outputs.changed_spokes != ''
+        run: |
+          for spoke in ${{ steps.changes.outputs.changed_spokes }}; do
+            echo "Processing spoke $spoke..."
+            terraform -chdir=proxmox/proxmox workspace new "$spoke" || true
+            terraform -chdir=proxmox/proxmox workspace select "$spoke"
+            for file in ./user_repo/org/spoke/$spoke/*.tfvars; do
+              echo "Applying $file..."
+              terraform -chdir=proxmox/proxmox apply -auto-approve -var-file="$file"
+            done
+          done
