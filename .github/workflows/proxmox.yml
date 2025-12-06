@@ -45,7 +45,6 @@ jobs:
       - name: Find changed spokes
         id: changes
         run: |
-          # Determine commit range based on event type
           if [ "${{ github.event_name }}" = "pull_request" ]; then
             range="${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }}"
           else
@@ -54,15 +53,16 @@ jobs:
 
           echo "Using commit range: $range"
 
-          # Extract spoke names from changed tfvars paths
+          # Show raw changed files for debugging
+          git diff --name-only $range
+
+          # Match tfvars files under org/spoke/<spoke>/
           changed_spokes=$(git diff --name-only $range \
             | grep -E '^user_repo/org/spoke/[^/]+/[^/]+\.tfvars$' \
             | awk -F'/' '{print $4}' \
             | sort -u)
 
           echo "Changed spokes: $changed_spokes"
-
-          # Export to GitHub Actions output
           echo "changed_spokes=$changed_spokes" >> $GITHUB_OUTPUT
 
       # Terraform apply for each tfvars file in user repo
