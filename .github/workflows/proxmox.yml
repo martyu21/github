@@ -77,7 +77,7 @@ jobs:
               | grep "org/spoke/$spoke/.*\.tfvars")
 
             for file in $files; do
-              abs_file="./user_repo/$file"
+              abs_file="$(realpath "./user_repo/$file")"
               echo "Applying $abs_file..."
               ls -l "$abs_file"   # <-- debug: confirm file exists
               terraform -chdir=proxmox/proxmox apply -auto-approve -var-file="$abs_file"
