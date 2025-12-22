@@ -5,7 +5,12 @@ on:
     branches:
       - main
 jobs:
+
+  basic-check:
+    uses: ./.github/workflows/basic-check.yml
+
   terraform:
+    needs: basic-check
     runs-on: self-hosted
     env:
       TF_VAR_access_key: ${{ secrets.ACCESS_KEY }}
