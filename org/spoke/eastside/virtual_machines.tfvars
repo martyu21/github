@@ -1,5 +1,5 @@
 vms = [
-  { name = "E01", cores = 2, memory = 4096 }
+  { name = "E01", cores = 2, memory = 2046 }
 ]
 
 proxmox_node        = "westside"
