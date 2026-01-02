@@ -1,0 +1,35 @@
+name: Dispatch AD Automation
+
+on:
+  push:
+    paths:
+      - "org/spoke/eastside/**/*.yml"   # Only AD vars in this spoke
+      - "org/spoke/eastside/**/*.yaml"
+
+jobs:
+  dispatch:
+    runs-on: self-hosted  
+    env:
+    TF_VAR_access_key: ${{ secrets.ACCESS_KEY }}
+    TF_VAR_secret_key: ${{ secrets.SECRET_KEY }}
+    AWS_ACCESS_KEY_ID: ${{ secrets.ACCESS_KEY }}
+    AWS_SECRET_ACCESS_KEY: ${{ secrets.SECRET_KEY }}
+    VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
+
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Determine changed AD vars files
+        id: changes
+        run: |
+          echo "changed=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} | tr '\n' ',' | sed 's/,$//')" >> $GITHUB_OUTPUT
+
+      - name: Send dispatch event to ansible_ad repo
+        run: |
+          curl -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ secrets.GH_PAT }}" \
+            https://api.github.com/repos/martyu21/ansible_ad/dispatches \
+            -d "{\"event_type\": \"ad_vars_update\", \"client_payload\": {\"changed_files\": \"${{ steps.changes.outputs.changed }}\"}}"
