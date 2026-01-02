@@ -8,14 +8,7 @@ on:
 
 jobs:
   dispatch:
-    runs-on: self-hosted  
-    env:
-    TF_VAR_access_key: ${{ secrets.ACCESS_KEY }}
-    TF_VAR_secret_key: ${{ secrets.SECRET_KEY }}
-    AWS_ACCESS_KEY_ID: ${{ secrets.ACCESS_KEY }}
-    AWS_SECRET_ACCESS_KEY: ${{ secrets.SECRET_KEY }}
-    VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
-
+    runs-on: self-hosted 
 
     steps:
       - name: Checkout repo
