@@ -20,3 +20,10 @@ service_accounts:
     enabled: true
     password: 'Monitoring@2024'
     ou: "OU=Users,OU=Westside,DC=westside,DC=local"
+  - name: svc_tue_account
+    username: svc_tue_account
+    firstname: Service
+    lastname: Tuesday
+    enabled: true
+    password: 'TuesdayPassword!2024'
+    ou: "OU=Users,OU=Westside,DC=westside,DC=local"
