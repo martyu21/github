@@ -1,0 +1,22 @@
+service_accounts:
+  - name: svc_test_account
+    username: svc_test_account
+    firstname: Service
+    lastname: Test
+    enabled: true
+    password: 'AnotherComplexPassword123!'
+    ou: "OU=Users,OU=Westside,DC=westside,DC=local"
+  - name: svc_backup_account
+    username: svc_backup_account
+    firstname: Service
+    lastname: Backup
+    enabled: true
+    password: 'BackupPassword!234'
+    ou: "OU=Users,OU=Westside,DC=westside,DC=local"
+  - name: svc_mon_account
+    username: svc_mon_account
+    firstname: Service
+    lastname: Monitoring
+    enabled: true
+    password: 'Monitoring@2024'
+    ou: "OU=Users,OU=Westside,DC=westside,DC=local"
