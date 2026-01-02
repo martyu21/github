@@ -3,8 +3,7 @@ name: Dispatch AD Automation
 on:
   push:
     paths:
-      - "org/spoke/eastside/**/*.yml"   # Only AD vars in this spoke
-      - "org/spoke/eastside/**/*.yaml"
+      - "org/spoke/**/ad_user_vars.yml"  # Only AD vars in this spoke
 
 jobs:
   dispatch:
