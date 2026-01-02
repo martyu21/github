@@ -1,0 +1,8 @@
+service_accounts:
+  - name: svc_east_account
+    username: svc_east_account
+    firstname: Service
+    lastname: East
+    enabled: true
+    password: 'AnotherComplexPassword123!!'
+    ou: "OU=Users,OU=Westside,DC=westside,DC=local"
