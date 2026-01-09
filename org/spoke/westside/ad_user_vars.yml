@@ -6,3 +6,11 @@ service_accounts:
     enabled: true
     password: 'AnotherComplexPassword123!!'
     ou: "OU=Users,OU=Westside,DC=westside,DC=local"
+  - name: svc_east_acc
+    username: svc_east_acc
+    firstname: Service
+    lastname: EastAcc
+    enabled: true
+    password: 'AnotherComplexPassword123!!'
+    ou: "OU=Users,OU=Westside,DC=westside,DC=local"
+
