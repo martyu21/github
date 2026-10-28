@@ -4,8 +4,7 @@ on:
   push:
     branches:
       - main
-#     - '**'
-#      - '!main'
+
 jobs:
 
   basic-check:
@@ -16,6 +15,17 @@ jobs:
     runs-on: self-hosted
     environment:
       name: DEV
+
+    strategy:
+      fail-fast: false
+      matrix:
+        spoke: [
+          eastside,
+          westside,
+          northside,
+          southside
+        ]
+
     env:
       TF_VAR_access_key: ${{ secrets.ACCESS_KEY }}
       TF_VAR_secret_key: ${{ secrets.SECRET_KEY }}
@@ -25,78 +35,42 @@ jobs:
       TF_VAR_vm_pool: "dev-pool"
 
     steps:
-      # Checkout the github user repo (this repo, with tfvars files)
+
       - name: Checkout github user repo
         uses: actions/checkout@v4
         with:
           path: user_repo
           depth: 0
 
-      # Checkout the terraform_proxmox repo
       - name: Checkout terraform_proxmox repo
         uses: actions/checkout@v4
         with:
           repository: martyu21/terraform_proxmox
           path: proxmox
 
-      # Setup Terraform
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: 1.9.5
 
-      # Initialize Terraform
       - name: Terraform Init
         working-directory: proxmox/proxmox
         run: terraform init
 
-
-      # Terraform apply for each tfvars file in user repo
-
-      - name: Find changed spokes
-        id: changes
+      - name: Select workspace for spoke
         run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            range="${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }}"
-          else
-            range="${{ github.event.before }} ${{ github.sha }}"
-          fi
+          terraform -chdir=proxmox/proxmox workspace new "${{ matrix.spoke }}" || true
+          terraform -chdir=proxmox/proxmox workspace select "${{ matrix.spoke }}"
 
-          echo "Using commit range: $range"
-          git diff --name-only $range
-
-          changed_spokes=$(git diff --name-only $range \
-            | grep -E '^org/spoke/[^/]+/[^/]+\.tfvars$' \
-            | awk -F'/' '{print $3}' \
-            | sort -u)
-
-          echo "Changed spokes: $changed_spokes"
-          echo "changed_spokes=$changed_spokes" >> $GITHUB_OUTPUT
-
-      # Terraform apply for each tfvars file in user repo
-
-      - name: Apply only changed spokes
-        if: steps.changes.outputs.changed_spokes != ''
+      - name: Apply all tfvars for spoke
         run: |
-          for spoke in ${{ steps.changes.outputs.changed_spokes }}; do
-            echo "Processing spoke $spoke..."
-            terraform -chdir=proxmox/proxmox workspace new "$spoke" || true
-            terraform -chdir=proxmox/proxmox workspace select "$spoke"
-
-            # Find all changed tfvars files for this spoke
-            files=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} \
-              | grep "org/spoke/$spoke/.*\.tfvars")
-
-            for file in $files; do
-              abs_file="$(realpath "./user_repo/$file")"
-              echo "Applying $abs_file..."
-              ls -l "$abs_file"   # <-- debug: confirm file exists
-              terraform -chdir=proxmox/proxmox apply -auto-approve -var-file="$abs_file"
-            done
+          for file in user_repo/org/spoke/${{ matrix.spoke }}/*.tfvars; do
+            abs_file="$(realpath "$file")"
+            echo "Applying $abs_file..."
+            terraform -chdir=proxmox/proxmox apply -auto-approve -var-file="$abs_file"
           done
 
       - name: Read vm_pool from Terraform
-        if: steps.changes.outputs.changed_spokes != ''      
         id: pool
         run: |
           pool=$(terraform -chdir=proxmox/proxmox output -raw vm_pool)
@@ -105,18 +79,8 @@ jobs:
       - name: Destroy DEV resources
         if: steps.pool.outputs.vm_pool == 'dev-pool'
         run: |
-          for spoke in ${{ steps.changes.outputs.changed_spokes }}; do
-            echo "Destroying spoke $spoke..."
-            terraform -chdir=proxmox/proxmox workspace select "$spoke"
-
-            files=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} \
-              | grep "org/spoke/$spoke/.*\.tfvars")
-
-            for file in $files; do
-              abs_file="$(realpath "./user_repo/$file")"
-              echo "Destroying using $abs_file..."
-              terraform -chdir=proxmox/proxmox destroy -auto-approve -var-file="$abs_file"
-            done
+          for file in user_repo/org/spoke/${{ matrix.spoke }}/*.tfvars; do
+            abs_file="$(realpath "$file")"
+            echo "Destroying using $abs_file..."
+            terraform -chdir=proxmox/proxmox destroy -auto-approve -var-file="$abs_file"
           done
-
-
