@@ -49,29 +49,19 @@ jobs:
         working-directory: proxmox/proxmox
         run: terraform init
 
-
       # Terraform apply for each tfvars file in user repo
 
       - name: Find changed spokes
         id: changes
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
-            base_branch="${{ github.event.pull_request.base.ref }}"
-            head_branch="${{ github.event.pull_request.head.ref }}"
-
-            git fetch origin $base_branch --depth=1
-            git fetch origin $head_branch --depth=1
-
-            base=$(git merge-base origin/$base_branch origin/$head_branch)
-            head=$(git rev-parse origin/$head_branch)
+            range="${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }}"
           else
-            git fetch origin ${{ github.ref }} --depth=2
-            base=$(git rev-parse ${{ github.event.before }} || git rev-parse HEAD~1)
-            head=$(git rev-parse HEAD)
+            range="${{ github.event.before }} ${{ github.sha }}"
           fi
 
-          range="$base $head"
           echo "Using commit range: $range"
+          git diff --name-only $range
 
           changed_spokes=$(git diff --name-only $range \
             | grep -E '^org/spoke/[^/]+/[^/]+\.tfvars$' \
