@@ -96,6 +96,7 @@ jobs:
           done
 
       - name: Read vm_pool from Terraform
+        if: steps.changes.outputs.changed_spokes != ''      
         id: pool
         run: |
           pool=$(terraform -chdir=proxmox/proxmox output -raw vm_pool)
