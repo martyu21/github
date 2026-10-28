@@ -20,8 +20,7 @@ jobs:
       fail-fast: false
       matrix:
         spoke: [
-          eastside,
-          westside
+          eastside
         ]
 
     env:
