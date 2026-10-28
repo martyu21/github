@@ -56,11 +56,14 @@ jobs:
         id: changes
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
-            git fetch origin ${{ github.event.pull_request.base.ref }} --depth=1
-            git fetch origin ${{ github.event.pull_request.head.ref }} --depth=1
+            base_branch="${{ github.event.pull_request.base.ref }}"
+            head_branch="${{ github.event.pull_request.head.ref }}"
 
-            base=$(git merge-base origin/${{ github.event.pull_request.base.ref }} origin/${{ github.event.pull_request.head.ref }})
-            head=$(git rev-parse origin/${{ github.event.pull_request.head.ref }})
+            git fetch origin $base_branch --depth=1
+            git fetch origin $head_branch --depth=1
+
+            base=$(git merge-base origin/$base_branch origin/$head_branch)
+            head=$(git rev-parse origin/$head_branch)
           else
             git fetch origin ${{ github.ref }} --depth=2
             base=$(git rev-parse ${{ github.event.before }} || git rev-parse HEAD~1)
@@ -77,7 +80,6 @@ jobs:
 
           echo "Changed spokes: $changed_spokes"
           echo "changed_spokes=$changed_spokes" >> $GITHUB_OUTPUT
-
 
       # Terraform apply for each tfvars file in user repo
 
