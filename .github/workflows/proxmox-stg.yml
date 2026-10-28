@@ -1,0 +1,102 @@
+name: Deploy Proxmox VMs to Development
+
+on:
+  pull_request:
+    branches:
+      - main
+jobs:
+
+  basic-check:
+    uses: ./.github/workflows/basic-check.yml
+
+  terraform:
+    needs: basic-check
+    runs-on: self-hosted
+    environment:
+      name: DEV
+    env:
+      TF_VAR_access_key: ${{ secrets.ACCESS_KEY }}
+      TF_VAR_secret_key: ${{ secrets.SECRET_KEY }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.SECRET_KEY }}
+      VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
+      TF_VAR_vm_pool: "stg-pool"
+
+    steps:
+      # Checkout the github user repo (this repo, with tfvars files)
+      - name: Checkout github user repo
+        uses: actions/checkout@v4
+        with:
+          path: user_repo
+          depth: 0
+
+      # Checkout the terraform_proxmox repo
+      - name: Checkout terraform_proxmox repo
+        uses: actions/checkout@v4
+        with:
+          repository: martyu21/terraform_proxmox
+          path: proxmox
+
+      # Setup Terraform
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.5
+
+      # Initialize Terraform
+      - name: Terraform Init
+        working-directory: proxmox/proxmox
+        run: terraform init
+
+
+      # Terraform apply for each tfvars file in user repo
+
+      - name: Find changed spokes
+        id: changes
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            range="${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }}"
+          else
+            range="${{ github.event.before }} ${{ github.sha }}"
+          fi
+
+          echo "Using commit range: $range"
+          git diff --name-only $range
+
+          changed_spokes=$(git diff --name-only $range \
+            | grep -E '^org/spoke/[^/]+/[^/]+\.tfvars$' \
+            | awk -F'/' '{print $3}' \
+            | sort -u)
+
+          echo "Changed spokes: $changed_spokes"
+          echo "changed_spokes=$changed_spokes" >> $GITHUB_OUTPUT
+
+      # Terraform apply for each tfvars file in user repo
+
+      - name: Apply only changed spokes
+        if: steps.changes.outputs.changed_spokes != ''
+        run: |
+          for spoke in ${{ steps.changes.outputs.changed_spokes }}; do
+            echo "Processing spoke $spoke..."
+            terraform -chdir=proxmox/proxmox workspace new "$spoke" || true
+            terraform -chdir=proxmox/proxmox workspace select "$spoke"
+
+            # Find all changed tfvars files for this spoke
+            files=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} \
+              | grep "org/spoke/$spoke/.*\.tfvars")
+
+            for file in $files; do
+              abs_file="$(realpath "./user_repo/$file")"
+              echo "Applying $abs_file..."
+              ls -l "$abs_file"   # <-- debug: confirm file exists
+              terraform -chdir=proxmox/proxmox apply -auto-approve -var-file="$abs_file"
+            done
+          done
+
+      - name: Read vm_pool from Terraform
+        if: steps.changes.outputs.changed_spokes != ''      
+        id: pool
+        run: |
+          pool=$(terraform -chdir=proxmox/proxmox output -raw vm_pool)
+          echo "vm_pool=$pool" >> $GITHUB_OUTPUT
+
