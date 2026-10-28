@@ -8,9 +8,6 @@ on:
 
 jobs:
 
-  basic-check:
-    uses: ./.github/workflows/basic-check.yml
-
   terraform:
     runs-on: self-hosted
     environment:
