@@ -1,9 +1,11 @@
-name: Deploy Proxmox VMs
+name: Deploy Proxmox VMs to Development
 
 on:
   push:
     branches:
       - main
+#     - '**'
+#      - '!main'
 jobs:
 
   basic-check:
@@ -20,6 +22,7 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ secrets.ACCESS_KEY }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.SECRET_KEY }}
       VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
+      TF_VAR_vm_pool: "dev-pool"
 
     steps:
       # Checkout the github user repo (this repo, with tfvars files)
@@ -91,3 +94,18 @@ jobs:
               terraform -chdir=proxmox/proxmox apply -auto-approve -var-file="$abs_file"
             done
           done
+
+      - name: Read vm_pool from Terraform
+        id: pool
+        run: |
+          pool=$(terraform -chdir=proxmox/proxmox output -raw vm_pool)
+          echo "vm_pool=$pool" >> $GITHUB_OUTPUT
+
+      - name: Destroy DEV resources
+        if: steps.pool.outputs.vm_pool == 'dev-pool'
+        run: |
+          for spoke in ${{ steps.changes.outputs.changed_spokes }}; do
+            terraform -chdir=proxmox/proxmox workspace select "$spoke"
+            terraform -chdir=proxmox/proxmox destroy -auto-approve
+          done
+
