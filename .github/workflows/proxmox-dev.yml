@@ -38,6 +38,7 @@ jobs:
         with:
           repository: martyu21/terraform_proxmox
           path: proxmox
+          depth: 0
 
       # Setup Terraform
       - name: Setup Terraform
