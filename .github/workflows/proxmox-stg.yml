@@ -1,4 +1,4 @@
-name: Deploy Proxmox VMs to Staging
+name: Deploy spoke infrastructure to Staging
 
 on:
   pull_request:
