@@ -34,7 +34,7 @@ jobs:
       - name: Checkout terraform_proxmox repo
         uses: actions/checkout@v4
         with:
-          repository: martyu21/terraform_proxmox@main
+          repository: martyu21/terraform_proxmox
           path: proxmox
           fetch-depth: 0
 
@@ -56,13 +56,19 @@ jobs:
         id: changes
         run: |
           if [ "${{ github.event_name }}" = "pull_request" ]; then
-            range="${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }}"
+            git fetch origin ${{ github.event.pull_request.base.ref }} --depth=1
+            git fetch origin ${{ github.event.pull_request.head.ref }} --depth=1
+
+            base=$(git merge-base origin/${{ github.event.pull_request.base.ref }} origin/${{ github.event.pull_request.head.ref }})
+            head=$(git rev-parse origin/${{ github.event.pull_request.head.ref }})
           else
-            range="${{ github.event.before }} ${{ github.sha }}"
+            git fetch origin ${{ github.ref }} --depth=2
+            base=$(git rev-parse ${{ github.event.before }} || git rev-parse HEAD~1)
+            head=$(git rev-parse HEAD)
           fi
 
+          range="$base $head"
           echo "Using commit range: $range"
-          git diff --name-only $range
 
           changed_spokes=$(git diff --name-only $range \
             | grep -E '^org/spoke/[^/]+/[^/]+\.tfvars$' \
@@ -71,6 +77,7 @@ jobs:
 
           echo "Changed spokes: $changed_spokes"
           echo "changed_spokes=$changed_spokes" >> $GITHUB_OUTPUT
+
 
       # Terraform apply for each tfvars file in user repo
 
