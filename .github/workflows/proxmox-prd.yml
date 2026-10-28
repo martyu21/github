@@ -1,0 +1,68 @@
+name: Deploy spoke infrastructure to Production
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+
+  basic-check:
+    uses: ./.github/workflows/basic-check.yml
+
+  terraform:
+    needs: basic-check
+    runs-on: self-hosted
+    environment:
+      name: DEV
+
+    strategy:
+      fail-fast: false
+      matrix:
+        spoke: [
+          eastside
+        ]
+
+    env:
+      TF_VAR_access_key: ${{ secrets.ACCESS_KEY }}
+      TF_VAR_secret_key: ${{ secrets.SECRET_KEY }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.ACCESS_KEY }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.SECRET_KEY }}
+      VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
+      TF_VAR_vm_pool: "prd-pool"
+
+    steps:
+
+      - name: Checkout github user repo
+        uses: actions/checkout@v4
+        with:
+          path: user_repo
+          depth: 0
+
+      - name: Checkout terraform_proxmox repo
+        uses: actions/checkout@v4
+        with:
+          repository: martyu21/terraform_proxmox
+          path: proxmox
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.5
+
+      - name: Terraform Init
+        working-directory: proxmox/proxmox
+        run: terraform init
+
+      - name: Select workspace for spoke
+        run: |
+          terraform -chdir=proxmox/proxmox workspace new "${{ matrix.spoke }}" || true
+          terraform -chdir=proxmox/proxmox workspace select "${{ matrix.spoke }}"
+
+      - name: Apply all tfvars for spoke
+        run: |
+          for file in user_repo/org/spoke/${{ matrix.spoke }}/*.tfvars; do
+            abs_file="$(realpath "$file")"
+            echo "Applying $abs_file..."
+            terraform -chdir=proxmox/proxmox apply -auto-approve -var-file="$abs_file"
+          done
