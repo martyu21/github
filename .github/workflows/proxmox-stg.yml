@@ -34,14 +34,9 @@ jobs:
       - name: Checkout terraform_proxmox repo
         uses: actions/checkout@v4
         with:
-          repository: martyu21/terraform_proxmox
+          repository: martyu21/terraform_proxmox@main
           path: proxmox
           fetch-depth: 0
-
-      - name: Fetch base branch for PRs
-        if: github.event_name == 'pull_request'
-        run: |
-          git fetch origin ${{ github.event.pull_request.base.ref }} --depth=1
 
       # Setup Terraform
       - name: Setup Terraform
