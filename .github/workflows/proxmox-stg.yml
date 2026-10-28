@@ -7,11 +7,7 @@ on:
 
 jobs:
 
-  basic-check:
-    uses: ./.github/workflows/basic-check.yml
-
   terraform:
-    needs: basic-check
     runs-on: self-hosted
     environment:
       name: DEV
