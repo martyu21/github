@@ -53,23 +53,21 @@ jobs:
 
       - name: Find changed spokes
         id: changes
+        working-directory: user_repo
         run: |
-          if [ "${{ github.event_name }}" = "pull_request" ]; then
-            range="${{ github.event.pull_request.base.sha }} ${{ github.event.pull_request.head.sha }}"
-          else
-            range="${{ github.event.before }} ${{ github.sha }}"
-          fi
+          git fetch origin main
 
-          echo "Using commit range: $range"
-          git diff --name-only $range
+          BASE=$(git merge-base origin/main HEAD)
+          echo "Merge base: $BASE"
 
-          changed_spokes=$(git diff --name-only $range \
+          changed_spokes=$(git diff --name-only $BASE HEAD \
             | grep -E '^org/spoke/[^/]+/[^/]+\.tfvars$' \
             | awk -F'/' '{print $3}' \
             | sort -u)
 
           echo "Changed spokes: $changed_spokes"
           echo "changed_spokes=$changed_spokes" >> $GITHUB_OUTPUT
+
 
       # Terraform apply for each tfvars file in user repo
 
