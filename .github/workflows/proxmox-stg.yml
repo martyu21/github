@@ -1,4 +1,4 @@
-name: Deploy Proxmox VMs to Development
+name: Deploy Proxmox VMs to Staging
 
 on:
   pull_request:
