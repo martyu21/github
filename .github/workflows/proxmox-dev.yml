@@ -105,7 +105,17 @@ jobs:
         if: steps.pool.outputs.vm_pool == 'dev-pool'
         run: |
           for spoke in ${{ steps.changes.outputs.changed_spokes }}; do
+            echo "Destroying spoke $spoke..."
             terraform -chdir=proxmox/proxmox workspace select "$spoke"
-            terraform -chdir=proxmox/proxmox destroy -auto-approve
+
+            files=$(git diff --name-only ${{ github.event.before }} ${{ github.sha }} \
+              | grep "org/spoke/$spoke/.*\.tfvars")
+
+            for file in $files; do
+              abs_file="$(realpath "./user_repo/$file")"
+              echo "Destroying using $abs_file..."
+              terraform -chdir=proxmox/proxmox destroy -auto-approve -var-file="$abs_file"
+            done
           done
+
 
