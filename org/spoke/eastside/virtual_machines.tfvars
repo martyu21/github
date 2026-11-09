@@ -19,7 +19,12 @@ container_pool     = "dev-pool"
 containers = [
   {
     name   = "nginx01"
-    cores  = 2
-    memory = 4096
-  }
+    cores  = 1
+    memory = 512
+  },
+  {
+    name   = "nginx02"
+    cores  = 1
+    memory = 512
+  }  
 ]
