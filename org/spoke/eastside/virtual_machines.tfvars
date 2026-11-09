@@ -9,7 +9,7 @@ vm_storage          = "local-lvm"
 vm_bridge           = "vmbr0"
 
 
-template_name = "CT111"
+container_template_name = "CT111"
 
 container_storage  = "local-lvm"
 container_disk_size = "30G"
