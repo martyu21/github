@@ -18,12 +18,12 @@ container_bridge   = "vmbr1"
 containers = [
   {
     name   = "nginx01"
-    cores  = 1
+    cores  = 2
     memory = 512
   },
   {
     name   = "nginx02"
-    cores  = 1
+    cores  = 2
     memory = 512
   }  
 ]
