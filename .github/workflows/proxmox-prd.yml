@@ -27,6 +27,7 @@ jobs:
       VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
       TF_VAR_vm_pool: "prd-pool"
       TF_VAR_container_pool: "prd-pool"
+      TF_VAR_environment: "prd"      
 
     steps:
 

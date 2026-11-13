@@ -26,6 +26,8 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.SECRET_KEY }}
       VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
       TF_VAR_vm_pool: "stg-pool"
+      TF_VAR_container_pool: "stg-pool"
+      TF_VAR_environment: "stg"          
 
     steps:
 
