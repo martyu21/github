@@ -10,7 +10,7 @@ jobs:
   terraform:
     runs-on: self-hosted
     environment:
-      name: DEV
+      name: PRD
 
     strategy:
       fail-fast: false
