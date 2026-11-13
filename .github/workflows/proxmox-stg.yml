@@ -10,7 +10,7 @@ jobs:
   terraform:
     runs-on: self-hosted
     environment:
-      name: DEV
+      name: STG
 
     strategy:
       fail-fast: false
