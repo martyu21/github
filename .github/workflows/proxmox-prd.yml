@@ -50,8 +50,7 @@ jobs:
 
       - name: Terraform Init
         working-directory: proxmox/proxmox
-        run: terraform init \
-               -backend-config="key=${{ matrix.spoke }}/prd/state.tfstate"
+        run: terraform init -backend-config="key=${{ matrix.spoke }}/prd/state.tfstate"
 
       - name: Select workspace for spoke
         run: |
