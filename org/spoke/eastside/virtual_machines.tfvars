@@ -1,4 +1,4 @@
-container_template_name = "ubuntu-nginx-template-v1.0.0"
+container_template_name = "ubuntu-nginx-template-v1.1.0"
 
 container_storage  = "local-lvm"
 container_disk_size = "30G"
