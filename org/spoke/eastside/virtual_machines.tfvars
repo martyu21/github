@@ -9,12 +9,14 @@ containers = [
     name   = "nginx01"
     cores  = 1
     memory = 512
-    healthcheck_path = "/"
+    healthcheck   = true
+    health_path   = "/"
   },
   {
     name   = "nginx02"
     cores  = 1
     memory = 512
-    healthcheck_path = "/"
+    healthcheck   = true
+    health_path   = "/"
   }  
 ]
