@@ -28,7 +28,9 @@ jobs:
       VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
       TF_VAR_vm_pool: "dev-pool"
       TF_VAR_container_pool: "dev-pool"
-      TF_VAR_environment: "dev"            
+      TF_VAR_environment: "dev"
+      PM_USER: ${{ secrets.PROXMOX_USER }}
+      PM_PASSWORD: ${{ secrets.PROXMOX_PASSWORD }}    
 
     steps:
 
@@ -91,46 +93,31 @@ jobs:
           ids=$(terraform -chdir=proxmox/proxmox output -raw container_ids_csv)
           echo "ids=$ids" >> $GITHUB_OUTPUT
 
-      - name: Test SSH
+      - name: Start Containers via Proxmox API
         run: |
-          ssh \
-            -o BatchMode=yes \
-            -o ConnectTimeout=10 \
-            -o StrictHostKeyChecking=no \
-            root@${{ vars.host }} \
-            "hostname"
 
+          AUTH=$(curl -sk \
+            --data-urlencode "username=${PM_USER}" \
+            --data-urlencode "password=${PM_PASSWORD}" \
+            https://192.168.1.87:8006/api2/json/access/ticket)
 
-      - name: Start Containers
-        run: |
+          TICKET=$(echo "$AUTH" | jq -r '.data.ticket')
+          CSRF=$(echo "$AUTH" | jq -r '.data.CSRFPreventionToken')
+
           IFS=',' read -ra IDS <<< "${{ steps.container_ids.outputs.ids }}"
 
           for ID in "${IDS[@]}"; do
+
             echo "Starting CT $ID"
 
-            ssh -o StrictHostKeyChecking=no root@${{ vars.host }} \
-              "pct start $ID"
-
-            ssh -o StrictHostKeyChecking=no root@${{ vars.host }} \
-              "pct status $ID"
-          done          
-
-      - name: Verify Containers Started
-        run: |
-          IFS=',' read -ra IDS <<< "${{ steps.container_ids.outputs.ids }}"
-
-          for ID in "${IDS[@]}"; do
-
-            STATUS=$(ssh root@westside "pct status $ID" | awk '{print \$2}')
-
-            echo "CT $ID status: $STATUS"
-
-            if [ "$STATUS" != "running" ]; then
-              echo "Container $ID failed to start"
-              exit 1
-            fi
+            curl -sk \
+              -b "PVEAuthCookie=$TICKET" \
+              -H "CSRFPreventionToken: $CSRF" \
+              -X POST \
+              "https://${{ vars.host }}:8006/api2/json/nodes/westside/lxc/${ID}/status/start"
 
           done
+
 
       - name: Show Terraform Outputs
         run: |
