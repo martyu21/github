@@ -70,60 +70,60 @@ jobs:
           done
 
       - name: Show Terraform Outputs
-          run: |
-            terraform -chdir=proxmox/proxmox output
+        run: |
+          terraform -chdir=proxmox/proxmox output
 
-        - name: Read vm_pool from Terraform
-          id: pool
-          run: |
-            pool=$(terraform -chdir=proxmox/proxmox output -raw vm_pool)
-            echo "vm_pool=$pool" >> $GITHUB_OUTPUT
+      - name: Read vm_pool from Terraform
+        id: pool
+        run: |
+          pool=$(terraform -chdir=proxmox/proxmox output -raw vm_pool)
+          echo "vm_pool=$pool" >> $GITHUB_OUTPUT
 
-        - name: Read hostnames from Terraform
-          id: hostnames
-          run: |
-            hostnames=$(terraform -chdir=proxmox/proxmox output -raw hostnames)
-            echo "hostnames=$hostnames" >> $GITHUB_OUTPUT
+      - name: Read hostnames from Terraform
+        id: hostnames
+        run: |
+          hostnames=$(terraform -chdir=proxmox/proxmox output -raw hostnames)
+          echo "hostnames=$hostnames" >> $GITHUB_OUTPUT
 
-        - name: Debug Outputs
-          run: |
-            echo "vm_pool = ${{ steps.pool.outputs.vm_pool }}"
-            echo "hostnames = ${{ steps.hostnames.outputs.hostnames }}"
+      - name: Debug Outputs
+        run: |
+          echo "vm_pool = ${{ steps.pool.outputs.vm_pool }}"
+          echo "hostnames = ${{ steps.hostnames.outputs.hostnames }}"
 
-        - name: Health Check
-          if: success()
-          run: |
-            IFS=',' read -ra HOSTS <<< "${{ steps.hostnames.outputs.hostnames }}"
+      - name: Health Check
+        if: success()
+        run: |
+          IFS=',' read -ra HOSTS <<< "${{ steps.hostnames.outputs.hostnames }}"
 
-            for HOST in "${HOSTS[@]}"; do
+          for HOST in "${HOSTS[@]}"; do
 
-              echo "================================"
-              echo "Checking http://$HOST.${{vars.domainname}}/${{vars.healthcheck_path}}"
-              echo "================================"
+            echo "================================"
+            echo "Checking http://$HOST.${{vars.domainname}}/${{vars.healthcheck_path}}"
+            echo "================================"
 
-              PASSED=false
+            PASSED=false
 
-              for i in {1..30}; do
+            for i in {1..30}; do
 
-                if curl --fail --silent --show-error "http://$HOST.${{vars.domainname}}/${{vars.healthcheck_path}}" > /dev/null; then
-                  echo "✅ PASS - $HOST"
-                  PASSED=true
-                  break
-                fi
-
-                echo "Attempt $i/30 failed"
-                sleep 10
-
-              done
-
-              if [ "$PASSED" = false ]; then
-                echo "❌ FAIL - $HOST"
-                exit 1
+              if curl --fail --silent --show-error "http://$HOST.${{vars.domainname}}/${{vars.healthcheck_path}}" > /dev/null; then
+                echo "✅ PASS - $HOST"
+                PASSED=true
+                break
               fi
+
+              echo "Attempt $i/30 failed"
+              sleep 10
 
             done
 
-            echo "✅ All health checks passed"
+            if [ "$PASSED" = false ]; then
+              echo "❌ FAIL - $HOST"
+              exit 1
+            fi
+
+          done
+
+          echo "✅ All health checks passed"
 
 
       - name: Terraform Apply
