@@ -82,6 +82,10 @@ jobs:
               "$planfile"
           done
 
+      - name: Show Terraform Outputs
+        run: |
+          terraform -chdir=proxmox/proxmox output
+
       - name: Read vm_pool from Terraform
         id: pool
         run: |
@@ -94,11 +98,10 @@ jobs:
           hostnames=$(terraform -chdir=proxmox/proxmox output -raw hostnames)
           echo "hostnames=$hostnames" >> $GITHUB_OUTPUT
 
-      - name: Debug
-        id: debug
+      - name: Debug Outputs
         run: |
-          echo $GITHUB_OUTPUT
-
+          echo "vm_pool = ${{ steps.pool.outputs.vm_pool }}"
+          echo "hostnames = ${{ steps.hostnames.outputs.hostnames }}"
 
       - name: Destroy DEV resources
         if: steps.tf_outputs.outputs.vm_pool == 'dev-pool'
