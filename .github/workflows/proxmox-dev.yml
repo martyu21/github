@@ -103,6 +103,43 @@ jobs:
           echo "vm_pool = ${{ steps.pool.outputs.vm_pool }}"
           echo "hostnames = ${{ steps.hostnames.outputs.hostnames }}"
 
+      - name: Health Check
+        if: success()
+        run: |
+          IFS=',' read -ra HOSTS <<< "${{ steps.hostnames.outputs.hosts }}"
+
+          for HOST in "${HOSTS[@]}"; do
+
+            echo "================================"
+            echo "Checking http://$HOST/"
+            echo "================================"
+
+            PASSED=false
+
+            for i in {1..30}; do
+
+              if curl --silent --fail "http://$HOST/" > /dev/null; then
+                echo "✅ PASS - $HOST"
+                PASSED=true
+                break
+              fi
+
+              echo "Attempt $i/30 failed"
+              sleep 10
+
+            done
+
+            if [ "$PASSED" = false ]; then
+              echo "❌ FAIL - $HOST"
+              exit 1
+            fi
+
+          done
+
+          echo "✅ All health checks passed"
+
+
+
       - name: Destroy DEV resources
         if: steps.tf_outputs.outputs.vm_pool == 'dev-pool'
         run: |
