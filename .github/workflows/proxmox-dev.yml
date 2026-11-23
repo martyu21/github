@@ -111,14 +111,14 @@ jobs:
           for HOST in "${HOSTS[@]}"; do
 
             echo "================================"
-            echo "Checking http://$HOST/"
+            echo "Checking http://$HOST.westside.local/"
             echo "================================"
 
             PASSED=false
 
             for i in {1..30}; do
 
-              if curl --fail --silent --show-error "http://$HOST/1234" > /dev/null; then
+              if curl --fail --silent --show-error "http://$HOST.westside.local/" > /dev/null; then
                 echo "✅ PASS - $HOST"
                 PASSED=true
                 break
