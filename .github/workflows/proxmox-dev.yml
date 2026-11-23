@@ -82,17 +82,6 @@ jobs:
               "$planfile"
           done
 
-      - name: Start Containers
-        run: |
-          IDS=$(terraform -chdir=proxmox/proxmox output -json container_ids)
-
-          echo "$IDS" | tr -d '[],' | while read ID; do
-            [ -z "$ID" ] && continue
-
-            echo "Starting CT $ID"
-            pct start "$ID" || true
-          done
-
       - name: Show Terraform Outputs
         run: |
           terraform -chdir=proxmox/proxmox output
