@@ -91,6 +91,16 @@ jobs:
           ids=$(terraform -chdir=proxmox/proxmox output -raw container_ids_csv)
           echo "ids=$ids" >> $GITHUB_OUTPUT
 
+      - name: Test SSH
+        run: |
+          ssh \
+            -o BatchMode=yes \
+            -o ConnectTimeout=10 \
+            -o StrictHostKeyChecking=no \
+            root@${{ vars.host }} \
+            "hostname"
+
+
       - name: Start Containers
         run: |
           IFS=',' read -ra IDS <<< "${{ steps.container_ids.outputs.ids }}"
