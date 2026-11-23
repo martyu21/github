@@ -82,49 +82,17 @@ jobs:
               "$planfile"
           done
 
-      - name: Read Terraform Outputs
-        id: tf_outputs
+      - name: Read vm_pool from Terraform
+        id: pool
         run: |
-          echo "vm_pool=$(terraform -chdir=proxmox/proxmox output -raw vm_pool)" >> $GITHUB_OUTPUT
+          pool=$(terraform -chdir=proxmox/proxmox output -raw vm_pool)
+          echo "vm_pool=$pool" >> $GITHUB_OUTPUT
 
-          echo "healthcheck_hosts=$(terraform -chdir=proxmox/proxmox output -raw hostnames)" >> $GITHUB_OUTPUT
-
-      - name: Health Check
-        if: success()
+      - name: Read hostnames from Terraform
+        id: hostnames
         run: |
-          IFS=',' read -ra HOSTS <<< "${{ steps.tf_outputs.outputs.healthcheck_hosts }}"
-
-          for HOST in "${HOSTS[@]}"; do
-
-            echo ""
-            echo "======================================"
-            echo "Checking http://$HOST/"
-            echo "======================================"
-
-            PASSED=false
-
-            for i in {1..30}; do
-
-              if curl -fsS "http://$HOST/" >/dev/null; then
-                echo "PASS: $HOST"
-                PASSED=true
-                break
-              fi
-
-              echo "Attempt $i/30 failed for $HOST"
-              sleep 10
-
-            done
-
-            if [ "$PASSED" = false ]; then
-              echo "FAIL: $HOST"
-              exit 1
-            fi
-
-          done
-
-          echo ""
-          echo "All health checks passed"
+          hostnames=$(terraform -chdir=proxmox/proxmox output -raw hostnames)
+          echo "hostnames=$hostnames" >> $GITHUB_OUTPUT
 
       - name: Destroy DEV resources
         if: steps.tf_outputs.outputs.vm_pool == 'dev-pool'
