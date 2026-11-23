@@ -91,46 +91,41 @@ jobs:
 
           cat hostnames.json
 
-      - name: Debug Hostnames
-        run: |
-          echo "Contents of hostnames.json:"
-          cat hostnames.json
-
       - name: Health Check
         if: success()
         run: |
           python3 - <<EOF
-        import json
-        import subprocess
-        import time
-        import sys
+      import json
+      import subprocess
+      import time
+      import sys
 
-        with open("hostnames.json") as f:
-            hosts = json.load(f)
+      with open("hostnames.json") as f:
+          hosts = json.load(f)
 
-        for host in hosts.values():
-            print(f"Checking http://{host}/")
+      for host in hosts.values():
+          print(f"Checking http://{host}/")
 
-            healthy = False
+          healthy = False
 
-            for i in range(30):
-                result = subprocess.run(
-                    ["curl", "-fsS", f"http://{host}/"],
-                    capture_output=True
-                )
+          for i in range(30):
+              result = subprocess.run(
+                  ["curl", "-fsS", f"http://{host}/"],
+                  capture_output=True
+              )
 
-                if result.returncode == 0:
-                    print(f"✓ {host} is healthy")
-                    healthy = True
-                    break
+              if result.returncode == 0:
+                  print(f"✓ {host} is healthy")
+                  healthy = True
+                  break
 
-                print(f"Attempt {i+1} failed for {host}")
-                time.sleep(10)
+              print(f"Attempt {i+1} failed for {host}")
+              time.sleep(10)
 
-            if not healthy:
-                print(f"✗ Health check failed for {host}")
-                sys.exit(1)
-        EOF
+          if not healthy:
+              print(f"✗ Health check failed for {host}")
+              sys.exit(1)
+      EOF
 
       - name: Destroy DEV resources
         if: steps.tf_outputs.outputs.vm_pool == 'dev-pool'
