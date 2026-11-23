@@ -94,6 +94,12 @@ jobs:
           hostnames=$(terraform -chdir=proxmox/proxmox output -raw hostnames)
           echo "hostnames=$hostnames" >> $GITHUB_OUTPUT
 
+      - name: Debug
+        id: hostnames
+        run: |
+          echo $GITHUB_OUTPUT
+
+
       - name: Destroy DEV resources
         if: steps.tf_outputs.outputs.vm_pool == 'dev-pool'
         run: |
