@@ -82,12 +82,6 @@ jobs:
               "$planfile"
           done
 
-      - name: Read container id's
-        id: container_ids
-        run: |
-          container_ids=$(terraform -chdir=proxmox/proxmox output -raw container_ids)
-          echo "container_ids=$container_ids" >> $GITHUB_OUTPUT
-
       - name: Start Containers
         run: |
           IDS=$(terraform -chdir=proxmox/proxmox output -json container_ids)
