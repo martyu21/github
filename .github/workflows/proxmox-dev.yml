@@ -92,9 +92,7 @@ jobs:
             planfile="$(basename "$file" .tfvars).tfplan"
 
             echo "Applying $planfile..."
-            terraform -chdir=proxmox/proxmox state show \
-              -auto-approve \
-              "$planfile"
+            terraform -chdir=proxmox/proxmox state show "$planfile"
           done
 
       - name: Search Debug Log
