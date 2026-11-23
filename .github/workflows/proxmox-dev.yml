@@ -82,14 +82,43 @@ jobs:
               "$planfile"
           done
 
-      - name: Read vm_pool from Terraform
-        id: pool
+      - name: Read Terraform Outputs
+        id: tf_outputs
         run: |
-          pool=$(terraform -chdir=proxmox/proxmox output -raw vm_pool)
-          echo "vm_pool=$pool" >> $GITHUB_OUTPUT
+          echo "vm_pool=$(terraform -chdir=proxmox/proxmox output -raw vm_pool)" >> $GITHUB_OUTPUT
+
+          HOSTNAMES=$(terraform -chdir=proxmox/proxmox output -json hostnames | jq -c .)
+
+          echo "hostnames=$HOSTNAMES" >> $GITHUB_OUTPUT
+
+      - name: Health Check
+        if: success()
+        run: |
+          echo '${{ steps.tf_outputs.outputs.hostnames }}' \
+          | jq -r 'to_entries[].value' \
+          | while read HOST; do
+
+              echo "Checking http://$HOST/"
+
+              for i in {1..30}; do
+                if curl -fsS "http://$HOST/" >/dev/null; then
+                  echo "✓ $HOST is healthy"
+                  break
+                fi
+
+                echo "Attempt $i failed for $HOST, retrying..."
+                sleep 10
+
+                if [ "$i" -eq 30 ]; then
+                  echo "✗ Health check failed for $HOST"
+                  exit 1
+                fi
+              done
+
+            done
 
       - name: Destroy DEV resources
-        if: steps.pool.outputs.vm_pool == 'dev-pool'
+        if: steps.tf_outputs.outputs.vm_pool == 'dev-pool'
         run: |
           for file in user_repo/org/spoke/${{ matrix.spoke }}/*.tfvars; do
             abs_file="$(realpath "$file")"
