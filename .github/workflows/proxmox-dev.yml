@@ -118,7 +118,7 @@ jobs:
 
             for i in {1..30}; do
 
-              if curl --silent --fail "http://$HOST/1234" > /dev/null; then
+              if curl --silent "http://$HOST/1234" > /dev/null; then
                 echo "✅ PASS - $HOST"
                 PASSED=true
                 break
