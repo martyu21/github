@@ -72,6 +72,9 @@ jobs:
 
       - name: Terraform Apply
         if: success()
+        env:
+          TF_LOG: DEBUG
+          TF_LOG_PATH: terraform-debug.log
         run: |
           for file in user_repo/org/spoke/${{ matrix.spoke }}/*.tfvars; do
             planfile="$(basename "$file" .tfvars).tfplan"
@@ -81,6 +84,10 @@ jobs:
               -auto-approve \
               "$planfile"
           done
+
+      - name: Search Debug Log
+        run: |
+          grep -Ei "start|shutdown|stop|power" terraform-debug.log | tail -100
 
       - name: Show Terraform Outputs
         run: |
