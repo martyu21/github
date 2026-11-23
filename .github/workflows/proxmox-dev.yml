@@ -85,9 +85,42 @@ jobs:
               "$planfile"
           done
 
-      - name: Search Debug Log
+      - name: Read container IDs
+        id: container_ids
         run: |
-          grep -Ei "start|shutdown|stop|power" terraform-debug.log | tail -100
+          ids=$(terraform -chdir=proxmox/proxmox output -raw container_ids_csv)
+          echo "ids=$ids" >> $GITHUB_OUTPUT
+
+      - name: Start Containers
+        run: |
+          IFS=',' read -ra IDS <<< "${{ steps.container_ids.outputs.ids }}"
+
+          for ID in "${IDS[@]}"; do
+            echo "Starting CT $ID"
+
+            ssh -o StrictHostKeyChecking=no root@westside \
+              "pct start $ID"
+
+            ssh -o StrictHostKeyChecking=no root@westside \
+              "pct status $ID"
+          done          
+
+      - name: Verify Containers Started
+        run: |
+          IFS=',' read -ra IDS <<< "${{ steps.container_ids.outputs.ids }}"
+
+          for ID in "${IDS[@]}"; do
+
+            STATUS=$(ssh root@westside "pct status $ID" | awk '{print \$2}')
+
+            echo "CT $ID status: $STATUS"
+
+            if [ "$STATUS" != "running" ]; then
+              echo "Container $ID failed to start"
+              exit 1
+            fi
+
+          done
 
       - name: Show Terraform Outputs
         run: |
