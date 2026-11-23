@@ -85,16 +85,6 @@ jobs:
               "$planfile"
           done
 
-      - name: Terraform Apply
-        if: success()
-        run: |
-          for file in user_repo/org/spoke/${{ matrix.spoke }}/*.tfvars; do
-            planfile="$(basename "$file" .tfvars).tfplan"
-
-            echo "Applying $planfile..."
-            terraform -chdir=proxmox/proxmox state show "$planfile"
-          done
-
       - name: Search Debug Log
         run: |
           grep -Ei "start|shutdown|stop|power" terraform-debug.log | tail -100
