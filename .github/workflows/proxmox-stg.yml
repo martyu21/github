@@ -57,10 +57,26 @@ jobs:
           terraform -chdir=proxmox/proxmox workspace new "${{ matrix.spoke }}" || true
           terraform -chdir=proxmox/proxmox workspace select "${{ matrix.spoke }}"
 
-      - name: Apply all tfvars for spoke
+      - name: Terraform Plan
         run: |
           for file in user_repo/org/spoke/${{ matrix.spoke }}/*.tfvars; do
             abs_file="$(realpath "$file")"
-            echo "Applying $abs_file..."
-            terraform -chdir=proxmox/proxmox apply -auto-approve -var-file="$abs_file"
+            planfile="$(basename "$file" .tfvars).tfplan"
+
+            echo "Planning $abs_file..."
+            terraform -chdir=proxmox/proxmox plan \
+              -out="$planfile" \
+              -var-file="$abs_file"
+          done
+
+      - name: Terraform Apply
+        if: success()
+        run: |
+          for file in user_repo/org/spoke/${{ matrix.spoke }}/*.tfvars; do
+            planfile="$(basename "$file" .tfvars).tfplan"
+
+            echo "Applying $planfile..."
+            terraform -chdir=proxmox/proxmox apply \
+              -auto-approve \
+              "$planfile"
           done
