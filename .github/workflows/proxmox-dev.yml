@@ -98,10 +98,10 @@ jobs:
           for ID in "${IDS[@]}"; do
             echo "Starting CT $ID"
 
-            ssh -o StrictHostKeyChecking=no root@westside \
+            ssh -o StrictHostKeyChecking=no root@${{ vars.host }} \
               "pct start $ID"
 
-            ssh -o StrictHostKeyChecking=no root@westside \
+            ssh -o StrictHostKeyChecking=no root@${{ vars.host }} \
               "pct status $ID"
           done          
 
