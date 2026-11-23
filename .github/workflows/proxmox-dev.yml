@@ -106,7 +106,7 @@ jobs:
       - name: Health Check
         if: success()
         run: |
-          IFS=',' read -ra HOSTS <<< "${{ steps.hostnames.outputs.hosts }}"
+          IFS=',' read -ra HOSTS <<< "${{ steps.hostnames.outputs.hostnames }}"
 
           for HOST in "${HOSTS[@]}"; do
 
@@ -118,7 +118,7 @@ jobs:
 
             for i in {1..30}; do
 
-              if curl --silent "http://$HOST/1234" > /dev/null; then
+              if curl --fail --silent --show-error "http://$HOST/1234" > /dev/null; then
                 echo "✅ PASS - $HOST"
                 PASSED=true
                 break
@@ -141,7 +141,7 @@ jobs:
 
 
       - name: Destroy DEV resources
-        if: steps.tf_outputs.outputs.vm_pool == 'dev-pool'
+        if: steps.pool.outputs.vm_pool == 'dev-pool'
         run: |
           for file in user_repo/org/spoke/${{ matrix.spoke }}/*.tfvars; do
             abs_file="$(realpath "$file")"
