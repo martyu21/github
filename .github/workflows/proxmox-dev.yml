@@ -93,13 +93,15 @@ jobs:
           ids=$(terraform -chdir=proxmox/proxmox output -raw container_ids_csv)
           echo "ids=$ids" >> $GITHUB_OUTPUT
 
-      - name: Start Containers via Proxmox API
+      - name: Start Containers via API
         run: |
-
           AUTH=$(curl -sk \
             --data-urlencode "username=${PM_USER}" \
             --data-urlencode "password=${PM_PASSWORD}" \
             https://192.168.1.87:8006/api2/json/access/ticket)
+
+          echo "Auth Response:"
+          echo "$AUTH"
 
           TICKET=$(echo "$AUTH" | jq -r '.data.ticket')
           CSRF=$(echo "$AUTH" | jq -r '.data.CSRFPreventionToken')
@@ -110,11 +112,14 @@ jobs:
 
             echo "Starting CT $ID"
 
-            curl -sk \
+            RESPONSE=$(curl -sk \
+              -w "\nHTTP_STATUS:%{http_code}\n" \
               -b "PVEAuthCookie=$TICKET" \
               -H "CSRFPreventionToken: $CSRF" \
               -X POST \
-              "https://${{ vars.host }}:8006/api2/json/nodes/westside/lxc/${ID}/status/start"
+              "https://192.168.1.87:8006/api2/json/nodes/westside/lxc/${ID}/status/start")
+
+            echo "$RESPONSE"
 
           done
 
