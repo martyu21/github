@@ -87,45 +87,44 @@ jobs:
         run: |
           echo "vm_pool=$(terraform -chdir=proxmox/proxmox output -raw vm_pool)" >> $GITHUB_OUTPUT
 
-          terraform -chdir=proxmox/proxmox output -json hostnames > hostnames.json
-
-          cat hostnames.json
+          echo "healthcheck_hosts=$(terraform -chdir=proxmox/proxmox output -raw hostnames)" >> $GITHUB_OUTPUT
 
       - name: Health Check
         if: success()
         run: |
-          python3 - <<EOF
-      import json
-      import subprocess
-      import time
-      import sys
+          IFS=',' read -ra HOSTS <<< "${{ steps.tf_outputs.outputs.healthcheck_hosts }}"
 
-      with open("hostnames.json") as f:
-          hosts = json.load(f)
+          for HOST in "${HOSTS[@]}"; do
 
-      for host in hosts.values():
-          print(f"Checking http://{host}/")
+            echo ""
+            echo "======================================"
+            echo "Checking http://$HOST/"
+            echo "======================================"
 
-          healthy = False
+            PASSED=false
 
-          for i in range(30):
-              result = subprocess.run(
-                  ["curl", "-fsS", f"http://{host}/"],
-                  capture_output=True
-              )
+            for i in {1..30}; do
 
-              if result.returncode == 0:
-                  print(f"✓ {host} is healthy")
-                  healthy = True
-                  break
+              if curl -fsS "http://$HOST/" >/dev/null; then
+                echo "PASS: $HOST"
+                PASSED=true
+                break
+              fi
 
-              print(f"Attempt {i+1} failed for {host}")
-              time.sleep(10)
+              echo "Attempt $i/30 failed for $HOST"
+              sleep 10
 
-          if not healthy:
-              print(f"✗ Health check failed for {host}")
-              sys.exit(1)
-      EOF
+            done
+
+            if [ "$PASSED" = false ]; then
+              echo "FAIL: $HOST"
+              exit 1
+            fi
+
+          done
+
+          echo ""
+          echo "All health checks passed"
 
       - name: Destroy DEV resources
         if: steps.tf_outputs.outputs.vm_pool == 'dev-pool'
