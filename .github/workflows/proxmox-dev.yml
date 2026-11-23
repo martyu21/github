@@ -98,7 +98,7 @@ jobs:
           AUTH=$(curl -sk \
             --data-urlencode "username=${PM_USER}" \
             --data-urlencode "password=${PM_PASSWORD}" \
-            https://192.168.1.87:8006/api2/json/access/ticket)
+            https://${{ vars.host }}:8006/api2/json/access/ticket)
 
           echo "Auth Response:"
           echo "$AUTH"
@@ -117,7 +117,7 @@ jobs:
               -b "PVEAuthCookie=$TICKET" \
               -H "CSRFPreventionToken: $CSRF" \
               -X POST \
-              "https://192.168.1.87:8006/api2/json/nodes/westside/lxc/${ID}/status/start")
+              "https://${{ vars.host }}:8006/api2/json/nodes/westside/lxc/${ID}/status/start")
 
             echo "$RESPONSE"
 
