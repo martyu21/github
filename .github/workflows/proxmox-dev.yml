@@ -87,9 +87,9 @@ jobs:
         run: |
           echo "vm_pool=$(terraform -chdir=proxmox/proxmox output -raw vm_pool)" >> $GITHUB_OUTPUT
 
-          HOSTNAMES=$(terraform -chdir=proxmox/proxmox output -json hostnames | jq -c .)
+          terraform -chdir=proxmox/proxmox output -json hostnames > hostnames.json
 
-          echo "hostnames=$HOSTNAMES" >> $GITHUB_OUTPUT
+          cat hostnames.json
 
       - name: Health Check
         if: success()
