@@ -95,7 +95,7 @@ jobs:
           echo "hostnames=$hostnames" >> $GITHUB_OUTPUT
 
       - name: Debug
-        id: hostnames
+        id: debug
         run: |
           echo $GITHUB_OUTPUT
 
